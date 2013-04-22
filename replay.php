@@ -68,23 +68,29 @@ $config = parse_ini_file('./config.ini');
                 });
 
                 janrain.events.onCaptureBackplaneReady.addHandler(function(){
-                    Backplane.subscribe(function(msg){
-                      if (msg.type == 'identity/login'){
-                        $("#loggedInNavigation").hide();
-                        $("#loggedOutNavigation").show();
-                        janrain.capture.ui.modal.close();
-                        $.ajax({
-                          type: 'GET',
-                          url: 'getmessage.php?bus=' + janrain.settings.capture.backplaneBusName
-                            + '&messageUrl=' + msg.messageURL,
-                          success: function(res) {
-                            var div = $('<div>').addClass('cenetered-col col10').append($('<pre>').html(JSON.stringify(res, null, 4)));
-                            $('#mainContent').append(div);
-                            $('#bpResults').show();
-                          }
-                        });
-                      }
-                  });
+                  var handleMsg = function(msg){
+                    if (msg.type == 'identity/login'){
+                      $("#loggedInNavigation").hide();
+                      $("#loggedOutNavigation").show();
+                      janrain.capture.ui.modal.close();
+                      $.ajax({
+                        type: 'GET',
+                        url: 'getmessage.php?bus=' + janrain.settings.capture.backplaneBusName
+                          + '&messageUrl=' + msg.messageURL,
+                        success: function(res) {
+                          var div = $('<div>').addClass('cenetered-col col10').append($('<pre>').html(JSON.stringify(res, null, 4)));
+                          $('#mainContent').append(div);
+                          $('#bpResults').show();
+                        }
+                      });
+                    }
+                  }
+                  Backplane.subscribe(handleMsg);
+                  var messages = Backplane.getCachedMessages();
+                  for (var i in messages) {
+                    handleMsg(messages[i]);
+                  }
+
                 });
             }
         </script>
